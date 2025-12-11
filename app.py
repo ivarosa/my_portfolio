@@ -12,28 +12,120 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# ===== SIDEBAR NAVIGATION =====
-st.sidebar.markdown("# 📍 Navigasi")
-page = st.sidebar.radio(
-    "Pilih halaman:",
-    ["🏠 Beranda", "👤 Tentang Saya", "📁 Proyek", "📊 Dashboard", "📧 Contact"]
-)
+# ===== CACHED DATA GENERATION =====
+@st.cache_data
+def generate_dashboard_data():
+    """Generate dashboard data once and cache it"""
+    dates = pd.date_range('2024-01-01', periods=30)
+    return pd.DataFrame({
+        'Date': dates,
+        'Sales': np.random.randint(1000, 5000, 30),
+        'Visitors': np.random.randint(500, 3000, 30),
+        'Conversion': np.random.uniform(0.01, 0.1, 30)
+    })
 
-st.sidebar.markdown("---")
-st.sidebar.markdown(
-    """
-    ### 🔗 Media Sosial
-    - [LinkedIn](https://linkedin.com)
-    - [GitHub](https://github.com)
-    - [Email](mailto:email@example.com)
-    """
-)
+@st.cache_data
+def get_skills_data():
+    """Return skills data"""
+    return pd.DataFrame({
+        'Skill': ['Python', 'SQL', 'Tableau', 'PowerBI', 'Excel', 'Statistics'],
+        'Proficiency': [95, 90, 85, 80, 95, 85]
+    })
 
-st.sidebar.markdown("---")
-st.sidebar.caption("© 2024 Portfolio Saya")
+@st.cache_data
+def get_projects_data():
+    """Return projects data with filtering capability"""
+    projects = [
+        {
+            'title': '📊 Proyek 1: E-commerce Sales Analysis',
+            'category': 'EDA',
+            'year': 2023,
+            'description': '''**Deskripsi:**
+Melakukan analisis mendalam terhadap data penjualan e-commerce untuk mengidentifikasi 
+trend dan peluang pertumbuhan.
+
+**Tools:** Python, Pandas, Matplotlib, Streamlit
+
+**Key Insights:**
+- Total sales meningkat 45% YoY
+- Kategori Electronics adalah top performer
+- Waktu terbaik untuk promo adalah Q4''',
+            'has_image': False
+        },
+        {
+            'title': '📈 Proyek 2: Customer Segmentation Dashboard',
+            'category': 'Dashboard',
+            'year': 2023,
+            'description': '''**Deskripsi:**
+Interactive dashboard untuk segmentasi pelanggan berdasarkan RFM analysis.
+
+**Tools:** SQL, Tableau, Python
+
+**Key Metrics:**
+- 5 customer segments identified
+- Average CLV per segment
+- Churn risk prediction''',
+            'has_image': False
+        },
+        {
+            'title': '🤖 Proyek 3: Churn Prediction Model',
+            'category': 'Prediction',
+            'year': 2024,
+            'description': '''**Deskripsi:**
+Machine learning model untuk memprediksi customer churn dengan akurasi 85%.
+
+**Tools:** Python, Scikit-learn, XGBoost
+
+**Performance:**
+- Accuracy: 85%
+- Precision: 0.82
+- Recall: 0.88''',
+            'has_image': False
+        }
+    ]
+    return pd.DataFrame(projects)
+
+# ===== UTILITY FUNCTIONS =====
+def render_divider():
+    """Render a divider line"""
+    st.markdown("---")
+
+def render_sidebar_nav():
+    """Render sidebar navigation"""
+    st.sidebar.markdown("# 📍 Navigasi")
+    page = st.sidebar.radio(
+        "Pilih halaman:",
+        ["🏠 Beranda", "👤 Tentang Saya", "📁 Proyek", "📊 Dashboard", "📧 Contact"]
+    )
+    
+    st.sidebar.markdown("---")
+    st.sidebar.markdown(
+        """
+        ### 🔗 Media Sosial
+        - [LinkedIn](https://linkedin.com)
+        - [GitHub](https://github.com)
+        - [Email](mailto:email@example.com)
+        """
+    )
+    st.sidebar.markdown("---")
+    st.sidebar.caption("© 2024 Portfolio Saya")
+    
+    return page
+
+def render_profile_image():
+    """Render profile image with fallback"""
+    try:
+        st.image(
+            "assets/profpict.png",
+            caption="Foto Profil",
+            use_container_width=True
+        )
+    except FileNotFoundError:
+        st.warning("⚠️ File 'assets/profpict.png' tidak ditemukan!")
+        st.info("💡 Buat folder 'assets/' dan masukkan foto Anda di sana.")
 
 # ===== PAGE: BERANDA =====
-if page == "🏠 Beranda":
+def page_beranda():
     col1, col2 = st.columns([2, 1])
     
     with col1:
@@ -57,17 +149,9 @@ if page == "🏠 Beranda":
                 st.info("Silakan scroll ke halaman Contact!")
     
     with col2:
-        try:
-            st.image(
-                "assets/profpict.png",     # ← Ubah ke nama file Anda!
-                caption="Foto Profil",
-                use_container_width=True
-            )
-        except FileNotFoundError:
-            st.warning("⚠️ File 'assets/profpict.jpg' tidak ditemukan!")
-            st.info("💡 Buat folder 'assets/' dan masukkan foto Anda di sana.")
+        render_profile_image()
     
-    st.markdown("---")
+    render_divider()
     
     # Statistics
     st.subheader("📈 Statistik Singkat")
@@ -78,7 +162,7 @@ if page == "🏠 Beranda":
     col4.metric("Tahun Pengalaman", 3, "+1")
 
 # ===== PAGE: TENTANG SAYA =====
-elif page == "👤 Tentang Saya":
+def page_tentang_saya():
     st.title("👤 Tentang Saya")
     
     st.subheader("Latar Belakang")
@@ -95,10 +179,7 @@ elif page == "👤 Tentang Saya":
     
     st.subheader("🛠️ Technical Skills")
     
-    skills_data = pd.DataFrame({
-        'Skill': ['Python', 'SQL', 'Tableau', 'PowerBI', 'Excel', 'Statistics'],
-        'Proficiency': [95, 90, 85, 80, 95, 85]
-    })
+    skills_data = get_skills_data()
     
     fig = px.bar(
         skills_data,
@@ -133,7 +214,7 @@ elif page == "👤 Tentang Saya":
     )
 
 # ===== PAGE: PROYEK =====
-elif page == "📁 Proyek":
+def page_proyek():
     st.title("📁 Proyek Saya")
     
     # Filter Proyek
@@ -144,116 +225,70 @@ elif page == "📁 Proyek":
         selected_category = st.multiselect(
             "Kategori:",
             ['EDA', 'Dashboard', 'Prediction', 'Visualization'],
-            default=['EDA', 'Dashboard']
+            default=['EDA', 'Dashboard', 'Prediction']
         )
     
     with col2:
         selected_year = st.slider(
             "Tahun:",
-            2021, 2024, (2022, 2024)
+            2021, 2024, (2021, 2024)
         )
     
-    st.markdown("---")
+    render_divider()
     
-    # Project 1
-    with st.expander("📊 Proyek 1: E-commerce Sales Analysis", expanded=True):
-        col1, col2 = st.columns([2, 1])
-        
-        with col1:
-            st.markdown(
-                """
-                **Deskripsi:**
-                Melakukan analisis mendalam terhadap data penjualan e-commerce untuk mengidentifikasi 
-                trend dan peluang pertumbuhan.
-                
-                **Tools:** Python, Pandas, Matplotlib, Streamlit
-                
-                **Key Insights:**
-                - Total sales meningkat 45% YoY
-                - Kategori Electronics adalah top performer
-                - Waktu terbaik untuk promo adalah Q4
-                """
-            )
-            if st.button("🔗 View Project", key="project1"):
-                st.info("Link ke project akan dibuka!")
-        
-        with col2:
-            st.image(
-                "assets/project1_ss.png",
-                caption="Project Screenshot"
-            )
+    # Load and filter projects
+    projects_df = get_projects_data()
     
-    # Project 2
-    with st.expander("📈 Proyek 2: Customer Segmentation Dashboard"):
-        st.markdown(
-            """
-            **Deskripsi:**
-            Interactive dashboard untuk segmentasi pelanggan berdasarkan RFM analysis.
-            
-            **Tools:** SQL, Tableau, Python
-            
-            **Key Metrics:**
-            - 5 customer segments identified
-            - Average CLV per segment
-            - Churn risk prediction
-            """
-        )
+    # Apply filters
+    filtered_projects = projects_df[
+        (projects_df['category'].isin(selected_category)) &
+        (projects_df['year'] >= selected_year[0]) &
+        (projects_df['year'] <= selected_year[1])
+    ]
     
-    # Project 3
-    with st.expander("🤖 Proyek 3: Churn Prediction Model"):
-        st.markdown(
-            """
-            **Deskripsi:**
-            Machine learning model untuk memprediksi customer churn dengan akurasi 85%.
+    if len(filtered_projects) == 0:
+        st.info("📭 Tidak ada proyek yang sesuai dengan filter Anda")
+        return
+    
+    # Display filtered projects
+    for idx, project in filtered_projects.iterrows():
+        with st.expander(f"{project['title']} ({project['year']})", expanded=(idx==0)):
+            col1, col2 = st.columns([2, 1]) if project['has_image'] else (st.container(), None)
             
-            **Tools:** Python, Scikit-learn, XGBoost
+            with col1:
+                st.markdown(project['description'])
+                if st.button("🔗 View Project", key=f"project_{idx}"):
+                    st.info(f"Link ke project {project['title']} akan dibuka!")
             
-            **Performance:**
-            - Accuracy: 85%
-            - Precision: 0.82
-            - Recall: 0.88
-            """
-        )
+            if col2 and project['has_image']:
+                with col2:
+                    try:
+                        st.image(f"assets/project1_ss.png", caption="Project Screenshot")
+                    except FileNotFoundError:
+                        st.info("📷 Screenshot tidak tersedia")
 
 # ===== PAGE: DASHBOARD =====
-elif page == "📊 Dashboard":
+def page_dashboard():
     st.title("📊 Interactive Dashboard")
     
-    # Generate sample data
-    dates = pd.date_range('2024-01-01', periods=30)
-    dashboard_data = pd.DataFrame({
-        'Date': dates,
-        'Sales': np.random.randint(1000, 5000, 30),
-        'Visitors': np.random.randint(500, 3000, 30),
-        'Conversion': np.random.uniform(0.01, 0.1, 30)
-    })
+    # Use cached data
+    dashboard_data = generate_dashboard_data()
     
     # KPI Cards
     st.subheader("📌 KPI Metrics")
     col1, col2, col3, col4 = st.columns(4)
     
-    col1.metric(
-        "Total Sales",
-        f"Rp {dashboard_data['Sales'].sum():,.0f}",
-        f"+{np.random.randint(5, 20)}%"
-    )
-    col2.metric(
-        "Total Visitors",
-        f"{dashboard_data['Visitors'].sum():,}",
-        f"+{np.random.randint(5, 20)}%"
-    )
-    col3.metric(
-        "Avg Conversion",
-        f"{dashboard_data['Conversion'].mean():.2%}",
-        f"+{np.random.randint(1, 10)}%"
-    )
-    col4.metric(
-        "Avg Order Value",
-        f"Rp {dashboard_data['Sales'].mean():,.0f}",
-        f"-{np.random.randint(1, 10)}%"
-    )
+    total_sales = dashboard_data['Sales'].sum()
+    total_visitors = dashboard_data['Visitors'].sum()
+    avg_conversion = dashboard_data['Conversion'].mean()
+    avg_order_value = dashboard_data['Sales'].mean()
     
-    st.markdown("---")
+    col1.metric("Total Sales", f"Rp {total_sales:,.0f}", "+15%")
+    col2.metric("Total Visitors", f"{total_visitors:,}", "+12%")
+    col3.metric("Avg Conversion", f"{avg_conversion:.2%}", "+8%")
+    col4.metric("Avg Order Value", f"Rp {avg_order_value:,.0f}", "-3%")
+    
+    render_divider()
     
     # Charts
     st.subheader("📈 Sales Trend")
@@ -270,7 +305,7 @@ elif page == "📊 Dashboard":
     
     with col1:
         fig2 = px.bar(
-            dashboard_data.groupby('Date').sum().reset_index(),
+            dashboard_data.groupby('Date').sum(numeric_only=True).reset_index(),
             x='Date',
             y='Visitors',
             title='Daily Visitors'
@@ -290,7 +325,7 @@ elif page == "📊 Dashboard":
         st.plotly_chart(fig3, use_container_width=True)
 
 # ===== PAGE: CONTACT =====
-elif page == "📧 Contact":
+def page_contact():
     st.title("📧 Get in Touch")
     
     st.write(
@@ -298,7 +333,7 @@ elif page == "📧 Contact":
         "silakan hubungi saya melalui form di bawah!"
     )
     
-    st.markdown("---")
+    render_divider()
     
     # Contact Form
     with st.form("contact_form"):
@@ -320,7 +355,7 @@ elif page == "📧 Contact":
             else:
                 st.error("❌ Mohon isi semua field!")
     
-    st.markdown("---")
+    render_divider()
     
     st.subheader("🔗 Kontak Lainnya")
     col1, col2, col3 = st.columns(3)
@@ -343,3 +378,21 @@ elif page == "📧 Contact":
         🐙 [github.com/username](https://github.com)
         """
     )
+
+# ===== MAIN APP =====
+def main():
+    page = render_sidebar_nav()
+    
+    if page == "🏠 Beranda":
+        page_beranda()
+    elif page == "👤 Tentang Saya":
+        page_tentang_saya()
+    elif page == "📁 Proyek":
+        page_proyek()
+    elif page == "📊 Dashboard":
+        page_dashboard()
+    elif page == "📧 Contact":
+        page_contact()
+
+if __name__ == "__main__":
+    main()
